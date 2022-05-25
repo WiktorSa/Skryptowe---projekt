@@ -244,10 +244,10 @@ class SimpleCalculatorApp(CalculatorApp):
     def append_number(self, digit):
         """
         Append the digit to the current number
-        If the number is equal to 0 than replace it with given digit
         """
 
         if self.calculator.is_working:
+            # Special case for 0 (replace digit) and with a new number after operation
             if self.number_line['text'] == ZERO or self.is_input_new_number:
                 self.number_line['text'] = digit
                 self.is_input_new_number = False
@@ -259,7 +259,7 @@ class SimpleCalculatorApp(CalculatorApp):
         Append decimal point to the current number
         """
 
-        if self.calculator.is_working and POINT not in self.number_line['text']:
+        if self.calculator.is_working and POINT not in self.number_line['text'] and not self.is_input_new_number:
             self.number_line['text'] += POINT
 
     def prepend_sign(self):
@@ -268,7 +268,7 @@ class SimpleCalculatorApp(CalculatorApp):
         Sign is not prepended to the 0 value
         """
 
-        if self.calculator.is_working:
+        if self.calculator.is_working and not self.is_input_new_number:
             if MINUS_SIGN in self.number_line['text']:
                 self.number_line['text'] = self.number_line['text'][1:]
             elif self.number_line['text'] != ZERO:
@@ -324,7 +324,6 @@ class SimpleCalculatorApp(CalculatorApp):
         if self.calculator.is_working and self.calculator.operation is not None:
             self.calculator.calculate(float(self.number_line['text']))
             self.set_number(self.calculator.number)
-            self.is_input_new_number = False
 
     def calculate_reciprocal(self):
         if self.calculator.is_working:

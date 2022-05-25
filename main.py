@@ -1,4 +1,3 @@
-import tkinter as tk
 from apps import App
 
 if __name__ == '__main__':
