@@ -65,7 +65,10 @@ class SimpleCalculator:
         self._number *= number
 
     def divide(self, number: float):
-        self._number /= number
+        if number == 0:
+            self._number = None
+        else:
+            self._number /= number
 
     def reciprocal(self, number: float):
         if number == 0:
