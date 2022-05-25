@@ -2,14 +2,14 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import abc
 import configparser
-from calculator import SimpleCalculator, AdvancedCalculator
+from calculator import SimpleCalculator, AdvancedCalculator, Operations
 
 # Icon location
 ICON_FILE: str = "images/calculator.ico"
 # Configuration file where app start location is stored
 CONFIG_FILE: str = "configuration.txt"
 # Maximal number of digits that can be displayed
-MAX_NO_DIGITS = 12
+MAX_NO_DIGITS = 15
 
 # Various constants used across the code
 ZERO = '0'
@@ -94,6 +94,9 @@ class SimpleCalculatorApp(CalculatorApp):
         super().__init__(parent)
         self.parent.title("Simple calculator")
         self.calculator = SimpleCalculator()
+        # If the user performs any operation that requires two numbers (like +, - etc.)
+        # Than the new digit will always replace the current number
+        self.is_input_new_number = False
 
     def create_menu(self):
         """
@@ -143,24 +146,27 @@ class SimpleCalculatorApp(CalculatorApp):
 
         memory_butttons = tk.Frame(workspace)
         tk.Button(memory_butttons, text='C', width=13, height=1, command=lambda:
-        self.set_number('0')).pack(side=tk.LEFT)
+        self.reset_calculator()).pack(side=tk.LEFT)
         tk.Button(memory_butttons, text='MC', width=12, height=1, command=lambda:
         self.calculator.clear_memory()).pack(side=tk.LEFT)
         tk.Button(memory_butttons, text='MR', width=12, height=1, command=lambda:
-        self.set_number(self.calculator.memory)).pack(side=tk.LEFT)
+        self.retrieve_memory()).pack(side=tk.LEFT)
         tk.Button(memory_butttons, text='M+', width=12, height=1, command=lambda:
-        self.calculator.add_memory(float(self.number_line['text']))).pack(side=tk.LEFT)
+        self.add_memory()).pack(side=tk.LEFT)
         tk.Button(memory_butttons, text='M-', width=12, height=1, command=lambda:
-        self.calculator.substract_memory(float(self.number_line['text']))).pack(side=tk.LEFT)
+        self.substract_memory()).pack(side=tk.LEFT)
         memory_butttons.pack()
 
         # For better visibility all key aspects of the calculator will be bold
         buttons_lane1 = tk.Frame(workspace)
         tk.Button(buttons_lane1, text='1/x', width=10, height=2, font='bold', command=lambda:
         self.calculate_reciprocal()).pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='x\u00b2', width=10, height=2, font='bold').pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='\u221Ax', width=10, height=2, font='bold').pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='\u00F7', width=10, height=2, font='bold').pack(side=tk.LEFT)
+        tk.Button(buttons_lane1, text='x\u00b2', width=10, height=2, font='bold', command=lambda:
+        self.calculate_power2()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane1, text='\u221Ax', width=10, height=2, font='bold', command=lambda:
+                  self.calculate_square_root()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane1, text='\u00F7', width=10, height=2, font='bold', command=lambda:
+                  self.start_operation(Operations.DIVISION)).pack(side=tk.LEFT)
         buttons_lane1.pack()
 
         buttons_lane2 = tk.Frame(workspace)
@@ -171,7 +177,8 @@ class SimpleCalculatorApp(CalculatorApp):
         self.append_number('8')).pack(side=tk.LEFT)
         tk.Button(buttons_lane2, text='9', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_number('9')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane2, text='x', width=10, height=2, font='bold').pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='x', width=10, height=2, font='bold', command=lambda:
+                  self.start_operation(Operations.MULTIPLICATION)).pack(side=tk.LEFT)
         buttons_lane2.pack()
 
         buttons_lane3 = tk.Frame(workspace)
@@ -181,7 +188,8 @@ class SimpleCalculatorApp(CalculatorApp):
         self.append_number('5')).pack(side=tk.LEFT)
         tk.Button(buttons_lane3, text='6', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_number('6')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane3, text='-', width=10, height=2, font='bold').pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='-', width=10, height=2, font='bold', command=lambda:
+                  self.start_operation(Operations.SUBTRACTION)).pack(side=tk.LEFT)
         buttons_lane3.pack()
 
         buttons_lane4 = tk.Frame(workspace)
@@ -191,7 +199,8 @@ class SimpleCalculatorApp(CalculatorApp):
         self.append_number('2')).pack(side=tk.LEFT)
         tk.Button(buttons_lane4, text='3', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_number('3')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text='+', width=10, height=2, font='bold').pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='+', width=10, height=2, font='bold', command=lambda:
+                  self.start_operation(Operations.ADDITION)).pack(side=tk.LEFT)
         buttons_lane4.pack()
 
         buttons_lane4 = tk.Frame(workspace)
@@ -202,10 +211,27 @@ class SimpleCalculatorApp(CalculatorApp):
         tk.Button(buttons_lane4, text=',', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_decimal()).pack(side=tk.LEFT)
         #  = button will have different background to be more recognizable
-        tk.Button(buttons_lane4, text='=', width=10, height=2, background='light blue', font='bold').pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='=', width=10, height=2, background='light blue', font='bold', command=lambda:
+                  self.finish_operation()).pack(side=tk.LEFT)
         buttons_lane4.pack()
 
         workspace.pack()
+
+    def reset_calculator(self):
+        self.calculator.restart()
+        self.number_line['text'] = ZERO
+
+    def retrieve_memory(self):
+        if self.calculator.is_working:
+            self.set_number(self.calculator.memory)
+
+    def add_memory(self):
+        if self.calculator.is_working:
+            self.calculator.add_memory(float(self.number_line['text']))
+
+    def substract_memory(self):
+        if self.calculator.is_working:
+            self.calculator.substract_memory(float(self.number_line['text']))
 
     # The number cannot have more than 12 digits due to inability to display more digits than that
     def is_max_length(self):
@@ -222,8 +248,9 @@ class SimpleCalculatorApp(CalculatorApp):
         """
 
         if self.calculator.is_working:
-            if self.number_line['text'] == ZERO:
-                self.set_number(digit)
+            if self.number_line['text'] == ZERO or self.is_input_new_number:
+                self.number_line['text'] = digit
+                self.is_input_new_number = False
             elif not self.is_max_length():
                 self.number_line['text'] += digit
 
@@ -247,34 +274,74 @@ class SimpleCalculatorApp(CalculatorApp):
             elif self.number_line['text'] != ZERO:
                 self.number_line['text'] = MINUS_SIGN + self.number_line['text']
 
-    # This may not be useful now but will be useful later
     def set_number(self, number):
+        """
+        Swap currently displayed number with a new number or error messsage
+        """
+
         if number is None:
             self.number_line['text'] = ERROR_DISPLAY
         else:
             self.number_line['text'] = self.format_number(number)
 
     def format_number(self, number):
-        print(number)
-        no_signs_number = number.replace(MINUS_SIGN, '')
-        integer_part, _, decimal_part = no_signs_number.partition('.')
-        # Number is too large to display
-        if len(integer_part) == MAX_NO_DIGITS:
+        """
+        Format the number so that it fits into the display of the calculator
+        """
+
+        integer_part, _, decimal_part = number.replace(MINUS_SIGN, '').partition('.')
+        # Number cannot be displayed because it's too large
+        if len(integer_part) > MAX_NO_DIGITS:
             self.calculator.disable()
             return ERROR_DISPLAY
+        # There are no decimal numbers. We can display the number immediately
+        elif len(decimal_part) == 0:
+            return number
+        # Display float values up to 12 digits. Remove trailing zeros
         else:
-            # At maximum 12 digits can be displayed, trailing zeros are removed
-            no_signs_displayed = MAX_NO_DIGITS
+            no_signs_display = MAX_NO_DIGITS
             if MINUS_SIGN in number:
-                no_signs_displayed += 1
+                no_signs_display += 1
             if POINT in number:
-                no_signs_displayed += 1
-            formatted_number = f'{number:>{no_signs_displayed}}'.strip()
-            return formatted_number
+                no_signs_display += 1
+            display_number = number[:no_signs_display].rstrip('0')
+            if display_number[-1] == POINT:
+                display_number = display_number[:-1]
+            # Don't display -0
+            if len(display_number) == 2 and display_number[0] == MINUS_SIGN and display_number[1] == ZERO:
+                display_number = ZERO
+
+            return display_number
+
+    # Start operation (like +, - etc.) that requires two numbers
+    def start_operation(self, operation):
+        if self.calculator.is_working:
+            self.calculator.number = float(self.number_line['text'])
+            self.calculator.operation = operation
+            self.is_input_new_number = True
+
+    def finish_operation(self):
+        if self.calculator.is_working and self.calculator.operation is not None:
+            self.calculator.calculate(float(self.number_line['text']))
+            self.set_number(self.calculator.number)
+            self.is_input_new_number = False
 
     def calculate_reciprocal(self):
         if self.calculator.is_working:
             self.calculator.reciprocal(float(self.number_line['text']))
+            self.calculator.operation = None
+            self.set_number(self.calculator.number)
+
+    def calculate_power2(self):
+        if self.calculator.is_working:
+            self.calculator.power2(float(self.number_line['text']))
+            self.calculator.operation = None
+            self.set_number(self.calculator.number)
+
+    def calculate_square_root(self):
+        if self.calculator.is_working:
+            self.calculator.square_root(float(self.number_line['text']))
+            self.calculator.operation = None
             self.set_number(self.calculator.number)
 
 
@@ -283,9 +350,6 @@ class AdvancedCalculatorApp(SimpleCalculatorApp):
         super().__init__(parent)
         self.parent.title("Advanced calculator")
         self.calculator = AdvancedCalculator()
-
-    def create_number_line(self):
-        pass
 
     def create_workspace(self):
         pass
