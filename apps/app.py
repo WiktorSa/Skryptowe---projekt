@@ -1,8 +1,10 @@
+import math
+import random
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import abc
 import configparser
-from calculator import SimpleCalculator, AdvancedCalculator, Operations
+from calculator import SimpleCalculator, AdvancedCalculator, SingleDigitOperations, TwoDigitOperations
 
 # Icon location
 ICON_FILE: str = "images/calculator.ico"
@@ -26,7 +28,8 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.frame = None
-        self.switch_frame(SimpleCalculatorApp)
+        # self.switch_frame(SimpleCalculatorApp)
+        self.switch_frame(AdvancedCalculatorApp)
 
     # Swap frames by creating a new frame and destroying the old frame
     def switch_frame(self, frame_class):
@@ -144,76 +147,76 @@ class SimpleCalculatorApp(CalculatorApp):
         # Each calculator frame will be assigned to the main workspace frame
         workspace = tk.Frame(self)
 
-        memory_butttons = tk.Frame(workspace)
-        tk.Button(memory_butttons, text='C', width=13, height=1, command=lambda:
+        buttons_lane_1 = tk.Frame(workspace)
+        tk.Button(buttons_lane_1, text='C', width=13, height=1, command=lambda:
         self.reset_calculator()).pack(side=tk.LEFT)
-        tk.Button(memory_butttons, text='MC', width=12, height=1, command=lambda:
+        tk.Button(buttons_lane_1, text='MC', width=12, height=1, command=lambda:
         self.calculator.clear_memory()).pack(side=tk.LEFT)
-        tk.Button(memory_butttons, text='MR', width=12, height=1, command=lambda:
+        tk.Button(buttons_lane_1, text='MR', width=12, height=1, command=lambda:
         self.retrieve_memory()).pack(side=tk.LEFT)
-        tk.Button(memory_butttons, text='M+', width=12, height=1, command=lambda:
+        tk.Button(buttons_lane_1, text='M+', width=12, height=1, command=lambda:
         self.add_memory()).pack(side=tk.LEFT)
-        tk.Button(memory_butttons, text='M-', width=12, height=1, command=lambda:
-        self.substract_memory()).pack(side=tk.LEFT)
-        memory_butttons.pack()
+        tk.Button(buttons_lane_1, text='M-', width=12, height=1, command=lambda:
+        self.subtract_memory()).pack(side=tk.LEFT)
+        buttons_lane_1.pack()
 
         # For better visibility all key aspects of the calculator will be bold
-        buttons_lane1 = tk.Frame(workspace)
-        tk.Button(buttons_lane1, text='1/x', width=10, height=2, font='bold', command=lambda:
-        self.calculate_reciprocal()).pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='x\u00b2', width=10, height=2, font='bold', command=lambda:
-        self.calculate_power2()).pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='\u221Ax', width=10, height=2, font='bold', command=lambda:
-                  self.calculate_square_root()).pack(side=tk.LEFT)
-        tk.Button(buttons_lane1, text='\u00F7', width=10, height=2, font='bold', command=lambda:
-                  self.start_operation(Operations.DIVISION)).pack(side=tk.LEFT)
-        buttons_lane1.pack()
-
         buttons_lane2 = tk.Frame(workspace)
-        # Number related buttons have white background for better visibility
-        tk.Button(buttons_lane2, text='7', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('7')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane2, text='8', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('8')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane2, text='9', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('9')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane2, text='x', width=10, height=2, font='bold', command=lambda:
-                  self.start_operation(Operations.MULTIPLICATION)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='1/x', width=10, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.RECIPROCAL)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='x\u00b2', width=10, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.POWER, 2)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='\u221Ax', width=10, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.ROOT, 2)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='\u00F7', width=10, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.DIVISION)).pack(side=tk.LEFT)
         buttons_lane2.pack()
 
         buttons_lane3 = tk.Frame(workspace)
-        tk.Button(buttons_lane3, text='4', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('4')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane3, text='5', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('5')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane3, text='6', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('6')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane3, text='-', width=10, height=2, font='bold', command=lambda:
-                  self.start_operation(Operations.SUBTRACTION)).pack(side=tk.LEFT)
+        # Number related buttons have white background for better visibility
+        tk.Button(buttons_lane3, text='7', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('7')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='8', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('8')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='9', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('9')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='x', width=10, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.MULTIPLICATION)).pack(side=tk.LEFT)
         buttons_lane3.pack()
 
         buttons_lane4 = tk.Frame(workspace)
-        tk.Button(buttons_lane4, text='1', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('1')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text='2', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('2')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text='3', width=10, height=2, background='white', font='bold', command=lambda:
-        self.append_number('3')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text='+', width=10, height=2, font='bold', command=lambda:
-                  self.start_operation(Operations.ADDITION)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='4', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('4')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='5', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('5')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='6', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('6')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='-', width=10, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.SUBTRACTION)).pack(side=tk.LEFT)
         buttons_lane4.pack()
 
-        buttons_lane4 = tk.Frame(workspace)
-        tk.Button(buttons_lane4, text='+/-', width=10, height=2, background='white', font='bold', command=lambda:
+        buttons_lane5 = tk.Frame(workspace)
+        tk.Button(buttons_lane5, text='1', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('1')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='2', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('2')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='3', width=10, height=2, background='white', font='bold', command=lambda:
+        self.append_number('3')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='+', width=10, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.ADDITION)).pack(side=tk.LEFT)
+        buttons_lane5.pack()
+
+        buttons_lane6 = tk.Frame(workspace)
+        tk.Button(buttons_lane6, text='+/-', width=10, height=2, background='white', font='bold', command=lambda:
         self.prepend_sign()).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text='0', width=10, height=2, background='white', font='bold', command=lambda:
+        tk.Button(buttons_lane6, text='0', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_number('0')).pack(side=tk.LEFT)
-        tk.Button(buttons_lane4, text=',', width=10, height=2, background='white', font='bold', command=lambda:
+        tk.Button(buttons_lane6, text=',', width=10, height=2, background='white', font='bold', command=lambda:
         self.append_decimal()).pack(side=tk.LEFT)
         #  = button will have different background to be more recognizable
-        tk.Button(buttons_lane4, text='=', width=10, height=2, background='light blue', font='bold', command=lambda:
-                  self.finish_operation()).pack(side=tk.LEFT)
-        buttons_lane4.pack()
+        tk.Button(buttons_lane6, text='=', width=10, height=2, background='light blue', font='bold', command=lambda:
+        self.finish_two_digit_operation()).pack(side=tk.LEFT)
+        buttons_lane6.pack()
 
         workspace.pack()
 
@@ -229,9 +232,9 @@ class SimpleCalculatorApp(CalculatorApp):
         if self.calculator.is_working:
             self.calculator.add_memory(float(self.number_line['text']))
 
-    def substract_memory(self):
+    def subtract_memory(self):
         if self.calculator.is_working:
-            self.calculator.substract_memory(float(self.number_line['text']))
+            self.calculator.subtract_memory(float(self.number_line['text']))
 
     # The number cannot have more than 12 digits due to inability to display more digits than that
     def is_max_length(self):
@@ -304,7 +307,7 @@ class SimpleCalculatorApp(CalculatorApp):
                 no_signs_display += 1
             if POINT in number:
                 no_signs_display += 1
-            display_number = number[:no_signs_display].rstrip('0')
+            display_number = number[:no_signs_display].rstrip(ZERO)
             if display_number[-1] == POINT:
                 display_number = display_number[:-1]
             # Don't display -0
@@ -313,34 +316,23 @@ class SimpleCalculatorApp(CalculatorApp):
 
             return display_number
 
+    # One digit operations are operation that only require one number like x^2
+    def perform_one_digit_operation(self, operation: SingleDigitOperations, condition_number=None):
+        if self.calculator.is_working:
+            self.calculator.calculate_one_digit_operation(float(self.number_line['text']), operation, condition_number)
+            self.calculator.operation = None
+            self.set_number(self.calculator.number)
+
     # Start operation (like +, - etc.) that requires two numbers
-    def start_operation(self, operation):
+    def start_two_digit_operation(self, operation: TwoDigitOperations):
         if self.calculator.is_working:
             self.calculator.number = float(self.number_line['text'])
             self.calculator.operation = operation
             self.is_input_new_number = True
 
-    def finish_operation(self):
+    def finish_two_digit_operation(self):
         if self.calculator.is_working and self.calculator.operation is not None:
-            self.calculator.calculate(float(self.number_line['text']))
-            self.set_number(self.calculator.number)
-
-    def calculate_reciprocal(self):
-        if self.calculator.is_working:
-            self.calculator.reciprocal(float(self.number_line['text']))
-            self.calculator.operation = None
-            self.set_number(self.calculator.number)
-
-    def calculate_power2(self):
-        if self.calculator.is_working:
-            self.calculator.power2(float(self.number_line['text']))
-            self.calculator.operation = None
-            self.set_number(self.calculator.number)
-
-    def calculate_square_root(self):
-        if self.calculator.is_working:
-            self.calculator.square_root(float(self.number_line['text']))
-            self.calculator.operation = None
+            self.calculator.calculate_two_digit_operation(float(self.number_line['text']))
             self.set_number(self.calculator.number)
 
 
@@ -350,5 +342,115 @@ class AdvancedCalculatorApp(SimpleCalculatorApp):
         self.parent.title("Advanced calculator")
         self.calculator = AdvancedCalculator()
 
+    # This workspace will have more buttons packed that simple calculator
     def create_workspace(self):
-        pass
+        workspace = tk.Frame(self)
+
+        buttons_lane_1 = tk.Frame(workspace)
+        tk.Button(buttons_lane_1, text='C', width=12, height=1, command=lambda:
+        self.reset_calculator()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='MC', width=12, height=1, command=lambda:
+        self.calculator.clear_memory()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='MR', width=12, height=1, command=lambda:
+        self.retrieve_memory()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='M+', width=12, height=1, command=lambda:
+        self.add_memory()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='M-', width=12, height=1, command=lambda:
+        self.subtract_memory()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='\u230AX\u230B', width=12, height=1, command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.FLOOR)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane_1, text='\u2308X\u2309', width=12, height=1, command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.CEIL)).pack(side=tk.LEFT)
+        buttons_lane_1.pack()
+
+        buttons_lane2 = tk.Frame(workspace)
+        tk.Button(buttons_lane2, text='1/x', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.RECIPROCAL)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='|x|', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.ABSOLUTE_VALUE)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='n!', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.FACTORIAL)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='\u03C0', width=9, height=2, font='bold', command=lambda:
+        self.set_number(str(math.pi))).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='e', width=9, height=2, font='bold', command=lambda:
+        self.set_number(str(math.e))).pack(side=tk.LEFT)
+        tk.Button(buttons_lane2, text='rand', width=9, height=2, font='bold', command=lambda:
+        self.set_number(str(random.random()))).pack(side=tk.LEFT)
+        buttons_lane2.pack()
+
+        buttons_lane3 = tk.Frame(workspace)
+        tk.Button(buttons_lane3, text='x\u00b2', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.POWER, 2)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='x\u00b3', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.POWER, 3)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='\u221Ax', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.ROOT, 2)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='\u221Bx', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.ROOT, 3)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='mod', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.MODULO)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane3, text='\u00F7', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.DIVISION)).pack(side=tk.LEFT)
+        buttons_lane3.pack()
+
+        buttons_lane4 = tk.Frame(workspace)
+        tk.Button(buttons_lane4, text='xʸ', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.EXPONENTATION)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='ʸ\u221Ax', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.ROOT)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='7', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('7')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='8', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('8')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='9', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('9')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane4, text='x', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.MULTIPLICATION)).pack(side=tk.LEFT)
+        buttons_lane4.pack()
+
+        buttons_lane5 = tk.Frame(workspace)
+        tk.Button(buttons_lane5, text='10ˣ', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.TOPOWER, 10)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='2ˣ', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.TOPOWER, 2)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='4', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('4')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='5', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('5')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='6', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('6')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane5, text='-', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.SUBTRACTION)).pack(side=tk.LEFT)
+        buttons_lane5.pack()
+
+        buttons_lane6 = tk.Frame(workspace)
+        tk.Button(buttons_lane6, text='log', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.LOG, 10)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane6, text='logᵧx', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.LOG)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane6, text='1', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('1')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane6, text='2', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('2')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane6, text='3', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('3')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane6, text='+', width=9, height=2, font='bold', command=lambda:
+        self.start_two_digit_operation(TwoDigitOperations.ADDITION)).pack(side=tk.LEFT)
+        buttons_lane6.pack()
+
+        buttons_lane7 = tk.Frame(workspace)
+        tk.Button(buttons_lane7, text='ln', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.LOG, math.e)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane7, text='eˣ', width=9, height=2, font='bold', command=lambda:
+        self.perform_one_digit_operation(SingleDigitOperations.TOPOWER, math.e)).pack(side=tk.LEFT)
+        tk.Button(buttons_lane7, text='+/-', width=9, height=2, font='bold', background='white', command=lambda:
+        self.prepend_sign()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane7, text='0', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_number('0')).pack(side=tk.LEFT)
+        tk.Button(buttons_lane7, text=',', width=9, height=2, font='bold', background='white', command=lambda:
+        self.append_decimal()).pack(side=tk.LEFT)
+        tk.Button(buttons_lane7, text='=', width=9, height=2, font='bold', background='light blue', command=lambda:
+        self.finish_two_digit_operation()).pack(side=tk.LEFT)
+        buttons_lane7.pack()
+
+        workspace.pack()
