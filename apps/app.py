@@ -29,7 +29,7 @@ class App(tk.Tk):
         super().__init__()
         self.frame = None
         # self.switch_frame(SimpleCalculatorApp)
-        self.switch_frame(AdvancedCalculatorApp)
+        self.switch_frame(SimpleCalculatorApp)
 
     # Swap frames by creating a new frame and destroying the old frame
     def switch_frame(self, frame_class):
