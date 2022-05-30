@@ -188,7 +188,7 @@ class AdvancedCalculator(SimpleCalculator):
     def log_given_value(self, number, log):
         try:
             self._number = math.log(number, log)
-        except ValueError:
+        except (ValueError, ZeroDivisionError):
             self._number = None
 
     def log(self, log):
