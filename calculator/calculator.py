@@ -177,7 +177,10 @@ class AdvancedCalculator(SimpleCalculator):
             self._number = None
 
     def modulo(self, number):
-        self._number %= number
+        if number == 0:
+            self._number = None
+        else:
+            self._number %= number
 
     def power(self, power):
         self.power_given_value(self._number, power)
