@@ -28,7 +28,6 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.frame = None
-        # self.switch_frame(SimpleCalculatorApp)
         self.switch_frame(SimpleCalculatorApp)
 
     # Swap frames by creating a new frame and destroying the old frame
@@ -300,7 +299,7 @@ class SimpleCalculatorApp(CalculatorApp):
         # There are no decimal numbers. We can display the number immediately
         elif len(decimal_part) == 0:
             return number
-        # Display float values up to 12 digits. Remove trailing zeros
+        # Display float values up to 15 digits. Remove trailing zeros
         else:
             no_signs_display = MAX_NO_DIGITS
             if MINUS_SIGN in number:
